@@ -1,8 +1,10 @@
 package dev.frankovich.main.commands;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -79,9 +81,19 @@ public class ChestCommand implements CommandExecutor
 			return 1;
 		}
 
-		Chest ch = (Chest) b.getLocation().getBlock().getState();
-		ItemStack[] stack = ch.getBlockInventory().getContents();
-		Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, (int) b.getLocation().getX(), (int) b.getLocation().getY(), (int) b.getLocation().getZ());
+		try
+		{
+			Chest ch = (Chest) b.getLocation().getBlock().getState();
+			ItemStack[] stack = ch.getBlockInventory().getContents();
+			Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), false);
+		}
+		catch (Exception e)
+		{
+			DoubleChest ch = (DoubleChest) b.getLocation().getBlock().getState();
+			ItemStack[] stack = ch.getInventory().getContents();
+			Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), true);
+		}
+
 		p.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
 
 		return 0;
