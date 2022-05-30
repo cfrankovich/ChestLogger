@@ -1,5 +1,6 @@
 name: ChestLogger
 version: 1.0
+api-version: 1.18
 author: cfrankovich
 main: dev.frankovich.main.Main
 description: Keeps track of chests with a ledger and watchlist.
