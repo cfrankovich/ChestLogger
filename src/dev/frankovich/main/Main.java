@@ -1,5 +1,8 @@
 package dev.frankovich.main;
 
+import java.io.File;
+
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import dev.frankovich.main.commands.*;
@@ -11,8 +14,11 @@ public class Main extends JavaPlugin
 	public void onEnable()
 	{
 		saveDefaultConfig();
-		new Chest(this);
+		new ChestCommand(this);
 		this.getCommand("chest").setTabCompleter(new ChestTabComplete());
 		new ChestListener(this);
+		new File("./plugins/ChestLogger/Chests/").mkdir();
+		new File("./plugins/ChestLogger/Ledgers/").mkdir();
+		Bukkit.getLogger().info("[ChestLogger] Plugin enabled!");
 	}
 }

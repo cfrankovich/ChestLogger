@@ -6,13 +6,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.bukkit.Bukkit;
+import org.bukkit.inventory.ItemStack;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 public class Utils 
 {
-    private static final String FILEPATH = "./plugins/ChestLogger/data.json";
+    private static final String DATAFILEPATH = "./plugins/ChestLogger/data.json";
+    private static final String CHESTFILEPATH = "./plugins/ChestLogger/Chests/";
 
     /* Returns a 6 character string containing a chest ID that hasn't been used before 
      * @param plugin - plugin to get the config from 
@@ -30,7 +32,7 @@ public class Utils
         String str;
         try
         {
-            Path path = Path.of(FILEPATH); 
+            Path path = Path.of(DATAFILEPATH); 
             str = Files.readString(path); 
         }
         catch (IOException e)
@@ -71,45 +73,58 @@ public class Utils
     /* Creates a new chest entry to be watched by a player
      * @param playername - the name of the player watching the chest
      * @param uuid - the UUID of the player watching the chest 
-     * @param itemnames - all of the items in the chest 
-     * @param itemamounts - the amounts of the items in the chest 
+     * @param stack - all of the items in the chest 
      * @param x, y, z - the coordinates of the chest
     */
-    public static int newChestEntry(Main plugin, String playername, String uuid, String[] itemnames, int[] itemamounts, int x, int y, int z)
+    public static int newChestEntry(Main plugin, String playername, String uuid, ItemStack[] stack, int x, int y, int z)
     {
+        /* Data File */
         JSONObject oldobj = getOldJSON(); 
         JSONObject jsonobj = new JSONObject(); 
         JSONObject details = new JSONObject(); 
         details.put("Player", playername);
         details.put("UUID", uuid);
-        JSONArray jsonitems = new JSONArray();
-        for (String item : itemnames)
-        {
-            jsonitems.add(item);
-        }
-        JSONArray jsonamounts = new JSONArray();
-        for (int amt : itemamounts)
-        {
-            jsonamounts.add(Integer.toString(amt));
-        } 
         details.put("X", Integer.toString(x));
         details.put("Y", Integer.toString(y));
         details.put("Z", Integer.toString(z));
-        details.put("Items", jsonitems);
-        details.put("Amounts", jsonamounts);
-        jsonobj.put(getNextID(plugin), details);
+        String nextID = getNextID(plugin);
+        jsonobj.put(nextID, details);
 
         String combined = combineJSON(jsonobj, oldobj); 
 
         try
         {
-            FileWriter writer = new FileWriter(FILEPATH);
+            FileWriter writer = new FileWriter(DATAFILEPATH);
             writer.write(combined);
             writer.close();
         }
         catch (IOException e)
         {
-            Bukkit.getLogger().info("[ChestLogger] Could not write to file.");
+            Bukkit.getLogger().info("[ChestLogger] Could not write to file \"" + DATAFILEPATH + "\"");
+        }
+
+        /* Chest File */
+        JSONObject items = new JSONObject();
+        JSONArray jsonitems = new JSONArray();
+        JSONArray jsonamounts = new JSONArray();
+        for (ItemStack s : stack)
+		{
+			if (s == null) continue;
+            jsonitems.add(s.getType().name().toLowerCase());
+            jsonamounts.add(Integer.toString(s.getAmount()));
+		}
+        items.put("item", jsonitems);
+        items.put("amount", jsonamounts);
+
+        try
+        {
+            FileWriter writer = new FileWriter(CHESTFILEPATH + nextID + ".json");
+            writer.write(items.toJSONString());
+            writer.close();
+        }
+        catch (IOException e)
+        {
+            Bukkit.getLogger().info("[ChestLogger] Could not write to file \"" + CHESTFILEPATH + nextID + ".json\"");
         }
 
         return 0;

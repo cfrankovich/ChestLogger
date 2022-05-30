@@ -2,20 +2,21 @@ package dev.frankovich.main.commands;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import dev.frankovich.main.Main;
 import dev.frankovich.main.Utils;
 
-public class Chest implements CommandExecutor 
+public class ChestCommand implements CommandExecutor 
 {
-	@SuppressWarnings("unused")
 	private Main plugin;
 	
-	public Chest(Main plugin)
+	public ChestCommand(Main plugin)
 	{
 		this.plugin = plugin;
 		plugin.getCommand("chest").setExecutor(this);
@@ -34,7 +35,7 @@ public class Chest implements CommandExecutor
 		Player p = (Player) sender;
 		if (!p.hasPermission("chest.use"))
 		{
-			sender.sendMessage("[§dChestLogger§f] You do not have permission to execute this command.");
+			sender.sendMessage("§c[ChestLogger] You do not have permission to execute this command.");
 			return true;
 		}
 
@@ -67,22 +68,20 @@ public class Chest implements CommandExecutor
 		/* If nothing is found just return */
 		if (b == null)
 		{
-			p.sendMessage("[§dChestLogger§f] No blocks found or in range!");
+			p.sendMessage("§c[ChestLogger] No blocks found or in range!");
 			return 1;
 		}
 		
 		/* Verify that the block is a chest */
 		if (!b.getType().equals(Material.CHEST))
 		{
-			p.sendMessage("[§dChestLogger§f] This is not a chest! Please aim at a chest to run this command.");
+			p.sendMessage("§c[ChestLogger] This is not a chest! Please aim at a chest to run this command.");
 			return 1;
 		}
 
-		/* Testing purposes */
-		String[] i = {"dirt", "diamonds", "grass"};
-		int[] w = {23, 42, 59};
-		Utils.newChestEntry(plugin, "topfloorboss", "something", i, w, (int) p.getLocation().getX(), (int) p.getLocation().getY(), (int) p.getLocation().getZ());
-
+		Chest ch = (Chest) b.getLocation().getBlock().getState();
+		ItemStack[] stack = ch.getBlockInventory().getContents();
+		Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, (int) b.getLocation().getX(), (int) b.getLocation().getY(), (int) b.getLocation().getZ());
 		p.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
 
 		return 0;
