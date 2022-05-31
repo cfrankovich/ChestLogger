@@ -106,7 +106,6 @@ public class ChestCommand implements CommandExecutor
 		}
 		Utils.newChestEntry(p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), false);
 
-		p.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
 	}
 
 	/* Remove an entry from the "data base"

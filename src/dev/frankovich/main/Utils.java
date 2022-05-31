@@ -419,9 +419,9 @@ public class Utils
         {
             String[] spl = line.split(",");    
             String otherplayerindicator = ""; 
-            if (spl[1] != p.getName())
+            if (!spl[1].equals(p.getName()))
             {
-                otherplayerindicator = "* |"; 
+                otherplayerindicator = "* | "; 
             }
 
             if (spl[2].equals("OPEN"))
@@ -449,6 +449,7 @@ public class Utils
             }
         }
 
+        fr.close();
         br.close();
         p.sendMessage(" ");
     }
@@ -551,6 +552,7 @@ public class Utils
             player.sendMessage("§c[ChestLogger] Error removing chest from data. Check with server administrators"); 
         }
 
+		player.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
 
     }
 }
