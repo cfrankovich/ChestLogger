@@ -19,6 +19,7 @@ public class Main extends JavaPlugin
 		new ChestListener(this);
 		new File("./plugins/ChestLogger/Chests/").mkdir();
 		new File("./plugins/ChestLogger/Ledgers/").mkdir();
+		new Utils(this);
 		Bukkit.getLogger().info("[ChestLogger] Plugin enabled!");
 	}
 }

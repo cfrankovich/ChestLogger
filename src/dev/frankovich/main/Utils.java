@@ -24,11 +24,15 @@ public class Utils
     private static final String DATAFILEPATH = "./plugins/ChestLogger/data.json";
     private static final String CHESTFILEPATH = "./plugins/ChestLogger/Chests/";
     private static final String LEDGERFILEPATH = "./plugins/ChestLogger/Ledgers/";
+    private static Main plugin; 
 
-    /* Returns a 6 character string containing a chest ID that hasn't been used before 
-     * @param plugin - plugin to get the config from 
-    */ 
-    public static String getNextID(Main plugin)
+    public Utils(Main plugin)
+    {
+        Utils.plugin = plugin;
+    }
+
+    /* Returns a 6 character string containing a chest ID that hasn't been used before */ 
+    public static String getNextID()
     {
         int id = plugin.getConfig().getInt("currentid");
         plugin.getConfig().set("currentid", id + 1);
@@ -249,14 +253,13 @@ public class Utils
     }
 
     /* Creates a new chest entry to be watched by a player
-     * @param plugin - the plugin
      * @param playername - the name of the player watching the chest
      * @param uuid - the UUID of the player watching the chest 
      * @param stack - all of the items in the chest 
      * @param x, y, z - the coordinates of the chest
      * @param dc - is it a double chest
     */
-    public static int newChestEntry(Main plugin, String playername, String uuid, ItemStack[] stack, int x, int y, int z, boolean dc)
+    public static int newChestEntry(String playername, String uuid, ItemStack[] stack, int x, int y, int z, boolean dc)
     {
         /* Data File */
         JSONObject oldobj = getJSON(DATAFILEPATH); 
@@ -268,7 +271,7 @@ public class Utils
         details.put("Y", Integer.toString(y));
         details.put("Z", Integer.toString(z));
         details.put("IsDouble", Boolean.toString(dc));
-        String nextID = getNextID(plugin);
+        String nextID = getNextID();
         jsonobj.put(nextID, details);
 
         String combined = combineJSON(jsonobj, oldobj); 
@@ -290,10 +293,9 @@ public class Utils
     }
 
     /* Returns chest id if location is in the data.json file
-     * @param plugin - the main plugin
      * @param location - the location to check
     */
-    public static String getChestIdFromLocation(Main plugin, Location location)
+    public static String getChestIdFromLocation(Location location)
     {
         int counter = 1;
         int max = plugin.getConfig().getInt("currentid");
@@ -316,10 +318,9 @@ public class Utils
     }
 
     /* Sends player messages of the chests they are watching
-     * @param plugin - the main plugin
      * @param p - player requesting messages
     */
-    public static void sendWatchedChests(Main plugin, Player p)
+    public static void sendWatchedChests(Player p)
     {
         JSONObject obj = getJSON(DATAFILEPATH);
         int counter = 1;
@@ -347,11 +348,10 @@ public class Utils
     }
 
     /* Returns true if chest is already being watched by same player
-     * @param plugin - the plugin
      * @param p - player trying to watch chest
      * @param b - block object to look for 
     */
-    public static boolean chestBeingWatched(Main plugin, Player p, Block b)
+    public static boolean chestBeingWatched(Player p, Block b)
     {
         JSONObject obj = getJSON(DATAFILEPATH);
         int counter = 1;
@@ -385,11 +385,10 @@ public class Utils
     }
 
     /* Sends the player the ledger requested 
-     * @param plugin - the plugin
      * @param p - player requesting ledger 
      * @param idstr - id of the chest
     */
-    public static void printLedger(Main plugin, Player p, String idstr) throws IOException
+    public static void printLedger(Player p, String idstr) throws IOException
     {
         JSONObject obj = getJSON(DATAFILEPATH);
         JSONObject data = (JSONObject) obj.get(idstr);
@@ -445,4 +444,28 @@ public class Utils
         p.sendMessage(" ");
     }
 
+    /* Returns all chest ids that the player can interact with 
+     * @param playername - player that is typing the command 
+    */
+    public static ArrayList<String> getInteractableIds(String playername) 
+    {
+        JSONObject obj = getJSON(DATAFILEPATH);
+        int counter = 1;
+        int max = plugin.getConfig().getInt("currentid");
+        ArrayList<String> returnme = new ArrayList<String>();
+
+        for (; counter < max; ++counter)
+        {
+            String idstr = String.format("%06d", counter);
+            JSONObject data = (JSONObject) obj.get(idstr);
+
+            if (((String) data.get("Player")).equals(playername))
+            {
+                returnme.add(Integer.toString(counter));
+            }
+
+        }
+
+        return returnme;
+    }
 }

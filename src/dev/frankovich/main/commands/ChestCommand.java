@@ -95,12 +95,12 @@ public class ChestCommand implements CommandExecutor
 
 		Chest ch = (Chest) b.getLocation().getBlock().getState();
 		ItemStack[] stack = ch.getBlockInventory().getContents();
-		if (Utils.chestBeingWatched(plugin, p, b))
+		if (Utils.chestBeingWatched(p, b))
 		{
 			p.sendMessage("§c[ChestLogger] You are already watching this chest!");	
 			return;
 		}
-		Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), false);
+		Utils.newChestEntry(p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), false);
 
 		p.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
 	}
@@ -121,7 +121,7 @@ public class ChestCommand implements CommandExecutor
 	{
 		p.sendMessage(" ");
 		p.sendMessage("§l[§d§lWatched Chests§f§l]"); 
-		Utils.sendWatchedChests(plugin, p);
+		Utils.sendWatchedChests(p);
 	}
 
 	/* Sends the chest ledger to player given from id
@@ -136,7 +136,7 @@ public class ChestCommand implements CommandExecutor
             idstr = String.format("%06d", Integer.parseInt(args[1]));
 			try
 			{	
-				Utils.printLedger(plugin, p, idstr);
+				Utils.printLedger(p, idstr);
 			}
 			catch (IOException e)
 			{

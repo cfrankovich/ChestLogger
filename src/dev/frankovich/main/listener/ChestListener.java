@@ -36,13 +36,13 @@ public class ChestListener implements Listener
             {
                 Chest chest;
                 chest = (Chest) invevent.getInventory().getHolder();
-                chestid = Utils.getChestIdFromLocation(plugin, chest.getLocation());
+                chestid = Utils.getChestIdFromLocation(chest.getLocation());
             }
             catch (Exception e)
             {
                 DoubleChest chest;
                 chest = (DoubleChest) invevent.getInventory().getHolder(); 
-                chestid = Utils.getChestIdFromLocation(plugin, chest.getLocation());
+                chestid = Utils.getChestIdFromLocation(chest.getLocation());
             }
 
             if (chestid.equals("")) return;
