@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -99,7 +98,7 @@ public class ChestCommand implements CommandExecutor
 		}
 
 		Chest ch = (Chest) b.getLocation().getBlock().getState();
-		ItemStack[] stack = ch.getBlockInventory().getContents();
+		ItemStack[] stack = ch.getInventory().getContents();
 		if (Utils.chestBeingWatched(p, b))
 		{
 			p.sendMessage("§c[ChestLogger] You are already watching this chest!");	
@@ -116,7 +115,16 @@ public class ChestCommand implements CommandExecutor
 	*/
 	private void del(Player p, String[] args)
 	{
-		p.sendMessage("deleting!");
+		try
+		{
+            String idstr = String.format("%06d", Integer.parseInt(args[1]));
+			Utils.deleteChest(p, idstr);
+		}
+		catch (IndexOutOfBoundsException e)
+		{
+			p.sendMessage("§c[ChestLogger] Please provide an id");
+		}
+		p.sendMessage("[§dChestLogger§f] Removed chest from your watchlist");
 	}
 
 	/* Lists all the chests the player is watching

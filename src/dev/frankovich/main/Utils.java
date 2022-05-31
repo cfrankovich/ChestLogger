@@ -305,6 +305,7 @@ public class Utils
         {
             String idstr = String.format("%06d", counter);
             JSONObject data = (JSONObject) obj.get(idstr);
+            if (data == null) { continue; }
 
             /* Check if x, y, z match */
             if (Integer.valueOf((String) data.get("X")) != location.getBlockX()) continue;
@@ -331,6 +332,8 @@ public class Utils
         {
             String idstr = String.format("%06d", counter);
             JSONObject data = (JSONObject) obj.get(idstr);
+            if (data == null) { continue; }
+
             String datauuid = (String) data.get("UUID");
 
             if (datauuid.equals(uuid))
@@ -362,6 +365,7 @@ public class Utils
         {
             String idstr = String.format("%06d", counter);
             JSONObject data = (JSONObject) obj.get(idstr);
+            if (data == null) { continue; }
             String datauuid = (String) data.get("UUID");
 
             if (datauuid.equals(uuid))
@@ -414,33 +418,38 @@ public class Utils
         while ((line = br.readLine()) != null && !line.equals(""))
         {
             String[] spl = line.split(",");    
+            String otherplayerindicator = ""; 
+            if (spl[1] != p.getName())
+            {
+                otherplayerindicator = "* |"; 
+            }
+
             if (spl[2].equals("OPEN"))
             {
-                p.sendMessage("§l" + spl[0] + " §r| " + spl[1] + " opened the chest");
+                p.sendMessage("§l" + otherplayerindicator + spl[0] + " §r| " + spl[1] + " opened the chest");
             }
             else if (spl[2].equals("TOOK"))
             {
-                p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " took out all " + spl[4] + " " + spl[3]);
+                p.sendMessage("§c§l" + otherplayerindicator + spl[0] + " §r§c| "+ spl[1] + " took out all " + spl[4] + " " + spl[3]);
             } 
             else if (spl[2].equals("ADD"))
             {
-                p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " put in " + spl[4] + " " + spl[3]);
+                p.sendMessage("§a§l" + otherplayerindicator + spl[0] + " §r§a| "+ spl[1] + " put in " + spl[4] + " " + spl[3]);
             }
             else if (spl[2].equals("EDIT"))
             {
                 if (Integer.parseInt(spl[4]) > 0)
                 {
-                    p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " put in " + spl[4] + " " + spl[3]);
+                    p.sendMessage("§a§l" + otherplayerindicator + spl[0] + " §r§a| "+ spl[1] + " put in " + spl[4] + " " + spl[3]);
                 }
                 else
                 {
-                    p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " took out " + Integer.toString(Integer.parseInt(spl[4])*-1) + " " + spl[3]);
+                    p.sendMessage("§c§l" + otherplayerindicator + spl[0] + " §r§c| "+ spl[1] + " took out " + Integer.toString(Integer.parseInt(spl[4])*-1) + " " + spl[3]);
                 }
             }
         }
 
-        Bukkit.getLogger().info("[ChestLogger] Could not close ledger file");
-
+        br.close();
         p.sendMessage(" ");
     }
 
@@ -458,6 +467,7 @@ public class Utils
         {
             String idstr = String.format("%06d", counter);
             JSONObject data = (JSONObject) obj.get(idstr);
+            if (data == null) { continue; }
 
             if (((String) data.get("Player")).equals(playername))
             {
@@ -496,5 +506,51 @@ public class Utils
         bw.close();
         fw.close();
     }
+    
+    /* Deletes all traces of a chest
+     * @param player - player that is requesting the delete  
+     * @param idstr - the id of the chest to clear
+    */
+    public static void deleteChest(Player player, String idstr)
+    {
+        JSONObject obj = getJSON(DATAFILEPATH);
+        JSONObject data = (JSONObject) obj.get(idstr);
+        if (data == null)
+        {
+            player.sendMessage("§c[ChestLogger] Chest #" + idstr + " doesn't exist!");
+            return;
+        }
+        if (!((String) data.get("UUID")).equals(player.getUniqueId().toString()))
+        {
+            player.sendMessage("§c[ChestLogger] You are not watching this chest"); 
+            return;
+        }
 
+        try
+        {
+            obj = (JSONObject) new JSONParser().parse(new FileReader(DATAFILEPATH));
+            obj.remove(idstr);
+            FileWriter writer = new FileWriter(DATAFILEPATH);
+            writer.write(obj.toJSONString());
+            writer.close();
+        }
+        catch (Exception e)
+        {
+            player.sendMessage("§c[ChestLogger] Error removing chest from data. Check with server administrators"); 
+        }
+
+        try
+        {
+            File delme = new File(LEDGERFILEPATH + idstr + ".txt");
+            delme.delete();
+            delme = new File(CHESTFILEPATH + idstr + ".json");
+            delme.delete();
+        }
+        catch (Exception e)
+        {
+            player.sendMessage("§c[ChestLogger] Error removing chest from data. Check with server administrators"); 
+        }
+
+
+    }
 }
