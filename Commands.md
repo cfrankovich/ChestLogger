@@ -1,11 +1,11 @@
 # Commands
 
 ## Contents
-1) [/chest add](#chest-add=)
-2) [/chest list](#chest-list=)
-3) [/chest ledger [ID]](#chest-ledger-id=)
-4) [/chest del [ID]](#chest-del-id=)
-5) [/chest clear [ID]](#chest-clear-id=)
+1) [/chest add](https://github.com/cfrankovich/ChestLogger/blob/main/Commands.md#chest-add=)
+2) [/chest list](https://github.com/cfrankovich/ChestLogger/blob/main/Commands.md#chest-list=)
+3) [/chest ledger [ID]](https://github.com/cfrankovich/ChestLogger/blob/main/Commands.md#chest-ledger-id=)
+4) [/chest del [ID]](https://github.com/cfrankovich/ChestLogger/blob/main/Commands.md#chest-del-id=)
+5) [/chest clear [ID]](https://github.com/cfrankovich/ChestLogger/blob/main/Commands.md#chest-clear-id=)
 
 ## /chest add
 Chest add is a command to add a chest to a player's watchlist. 
