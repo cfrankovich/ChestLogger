@@ -12,12 +12,18 @@ import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+
+import net.minecraft.network.syncher.DataWatcher.Item;
+import net.minecraft.world.level.material.Material;
 
 public class Utils 
 {
@@ -36,6 +42,7 @@ public class Utils
     {
         int id = plugin.getConfig().getInt("currentid");
         plugin.getConfig().set("currentid", id + 1);
+        plugin.saveConfig();
         return String.format("%06d", id); 
     }
 
@@ -257,9 +264,9 @@ public class Utils
      * @param uuid - the UUID of the player watching the chest 
      * @param stack - all of the items in the chest 
      * @param x, y, z - the coordinates of the chest
-     * @param dc - is it a double chest
+     * @param dc - is it a double chest (xz) (+=) means that the other chest is at x+1
     */
-    public static int newChestEntry(String playername, String uuid, ItemStack[] stack, int x, int y, int z, boolean dc)
+    public static int newChestEntry(String playername, String uuid, ItemStack[] stack, int x, int y, int z, String dc)
     {
         /* Data File */
         JSONObject oldobj = getJSON(DATAFILEPATH); 
@@ -270,7 +277,7 @@ public class Utils
         details.put("X", Integer.toString(x));
         details.put("Y", Integer.toString(y));
         details.put("Z", Integer.toString(z));
-        details.put("IsDouble", Boolean.toString(dc));
+        details.put("DoubleLocation", dc);
         String nextID = getNextID();
         jsonobj.put(nextID, details);
 
@@ -307,10 +314,31 @@ public class Utils
             JSONObject data = (JSONObject) obj.get(idstr);
             if (data == null) { continue; }
 
+            int addx = 0;
+            int addz = 0;
+            if (((String) data.get("DoubleLocation")).charAt(0) == '+') { addx = 1; }
+            else if (((String) data.get("DoubleLocation")).charAt(0) == '-') { addx = -1; }
+            else if (((String) data.get("DoubleLocation")).charAt(1) == '-') { addz = -1; }
+            else if (((String) data.get("DoubleLocation")).charAt(1) == '+') { addz = 1; }
+
             /* Check if x, y, z match */
-            if (Integer.valueOf((String) data.get("X")) != location.getBlockX()) continue;
-            if (Integer.valueOf((String) data.get("Z")) != location.getBlockZ()) continue;
-            if (Integer.valueOf((String) data.get("Y")) != location.getBlockY()) continue;
+            boolean found = false;
+
+            if (Integer.valueOf((String) data.get("X")) == location.getBlockX()
+                && Integer.valueOf((String) data.get("Z")) == location.getBlockZ()
+                && Integer.valueOf((String) data.get("Y")) == location.getBlockY()) 
+            {
+                found = true;
+            }
+
+            if (Integer.valueOf((String) data.get("X")) + addx == location.getBlockX()
+                && Integer.valueOf((String) data.get("Y")) == location.getBlockY()
+                && Integer.valueOf((String) data.get("Z")) + addz == location.getBlockZ()) 
+            {
+                found = true;
+            }
+
+            if (!found) continue;
 
             return idstr;
         }
@@ -538,6 +566,7 @@ public class Utils
         catch (Exception e)
         {
             player.sendMessage("§c[ChestLogger] Error removing chest from data. Check with server administrators"); 
+            return;
         }
 
         try
@@ -550,9 +579,81 @@ public class Utils
         catch (Exception e)
         {
             player.sendMessage("§c[ChestLogger] Error removing chest from data. Check with server administrators"); 
+            return;
         }
 
-		player.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
-
+		player.sendMessage("[§dChestLogger§f] Removed chest from your watchlist");
     }
+
+    /* Returns "+=" or "=-" depending where double is
+     * @param w - world the chest could be in
+     * @param ch - other chest 
+    */
+    public static String getDoubleLocation(World w, Chest ch)
+    {
+        int x = ch.getLocation().getBlockX();
+        int y = ch.getLocation().getBlockY();
+        int z = ch.getLocation().getBlockZ();
+
+        Block b = w.getBlockAt(x+1, y, z);
+        if (b.getType().equals(org.bukkit.Material.CHEST))
+        {
+            if (hasSameInventory(ch.getInventory(), ((Chest) b.getState()).getInventory()))
+            {
+                return "+=";
+            }
+        }
+
+        b = w.getBlockAt(x-1, y, z); 
+        if (b.getType().equals(org.bukkit.Material.CHEST))
+        {
+            if (hasSameInventory(ch.getInventory(), ((Chest) b.getState()).getInventory()))
+            {
+                return "-=";
+            }
+        }
+
+        b = w.getBlockAt(x, y, z+1); 
+        if (b.getType().equals(org.bukkit.Material.CHEST))
+        {
+            if (hasSameInventory(ch.getInventory(), ((Chest) b.getState()).getInventory()))
+            {
+                return "=+";
+            }
+        }
+
+        b = w.getBlockAt(x, y, z-1); 
+        if (b.getType().equals(org.bukkit.Material.CHEST))
+        {
+            if (hasSameInventory(ch.getInventory(), ((Chest) b.getState()).getInventory()))
+            {
+                return "=-";
+            }
+        }
+
+        return "==";
+    }
+
+    /* Returns if inventory have same contents
+     * @param one - first inventory
+     * @param two - second inventory
+    */
+    public static boolean hasSameInventory(Inventory one, Inventory two)
+    {
+        ItemStack[] ones = one.getContents();
+        ItemStack[] twos = two.getContents();
+        for (int i = 0; i < ones.length; ++i)
+        {
+            if (ones[i] == null) continue;
+            String f = ones[i].getType().name();
+            String s = twos[i].getType().name();
+            if (!f.equals(s))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }

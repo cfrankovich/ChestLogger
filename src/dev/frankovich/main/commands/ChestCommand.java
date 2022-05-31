@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -104,8 +105,11 @@ public class ChestCommand implements CommandExecutor
 			p.sendMessage("§c[ChestLogger] You are already watching this chest!");	
 			return;
 		}
-		Utils.newChestEntry(p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), false);
 
+		String dcl = Utils.getDoubleLocation(p.getWorld(), ch);
+		Utils.newChestEntry(p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), dcl);  
+
+		p.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
 	}
 
 	/* Remove an entry from the "data base"
@@ -123,7 +127,6 @@ public class ChestCommand implements CommandExecutor
 		{
 			p.sendMessage("§c[ChestLogger] Please provide an id");
 		}
-		p.sendMessage("[§dChestLogger§f] Removed chest from your watchlist");
 	}
 
 	/* Lists all the chests the player is watching
