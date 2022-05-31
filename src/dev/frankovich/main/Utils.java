@@ -1,6 +1,9 @@
 package dev.frankovich.main;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +12,8 @@ import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -30,7 +35,9 @@ public class Utils
         return String.format("%06d", id); 
     }
 
-    /* Returns the previous data in the file */
+    /* Returns json object from json file designated by the path given 
+     * @param pathstr - path to get json from
+    */
     private static JSONObject getJSON(String pathstr)
     {
         String str;
@@ -112,16 +119,44 @@ public class Utils
     public static void updateLedger(ItemStack[] stack, String id, String playername)
     {
         JSONObject obj = getJSON(CHESTFILEPATH + id + ".json");
-        JSONArray olditems = (JSONArray) obj.get("item");
-        JSONArray olditemamounts = (JSONArray) obj.get("amount");
 
+        /* Old Items */
+        JSONArray olditemsjson = (JSONArray) obj.get("item");
+        JSONArray olditemamountsjson = (JSONArray) obj.get("amount");
+        ArrayList<String> olditemnames = new ArrayList<String>();
+        ArrayList<String> olditemamounts = new ArrayList<String>();
+        for (int i = 0; i < olditemsjson.size(); ++i)
+        {
+            int index = olditemnames.indexOf((String) olditemsjson.get(i));
+            if (index == -1)
+            {
+                olditemnames.add((String) olditemsjson.get(i));
+                olditemamounts.add((String) olditemamountsjson.get(i));
+            }
+            else
+            {
+                int total = Integer.parseInt(olditemamounts.get(index)) + Integer.parseInt((String) olditemamountsjson.get(i));
+                olditemamounts.set(index, Integer.toString(total));
+            }
+        }
+
+        /* Edited/New Items */
         ArrayList<String> editeditems = new ArrayList<String>();
         ArrayList<String> editeditemamounts = new ArrayList<String>();
         for (ItemStack s : stack) 
         { 
             if (s == null) continue; 
+            int index = editeditems.indexOf(s.getType().name().toLowerCase());
+            if (index == -1)
+            {
             editeditems.add(s.getType().name().toLowerCase()); 
             editeditemamounts.add(Integer.toString(s.getAmount())); 
+            }
+            else
+            {
+                int total = Integer.parseInt(editeditemamounts.get(index)) + s.getAmount();
+                editeditemamounts.set(index, Integer.toString(total));
+            }
         }
 
         String date = java.time.LocalDate.now().toString();
@@ -141,77 +176,64 @@ public class Utils
             return;
         }
 
-        for (int i = 0; i < olditems.size(); ++i)
+        /* Compare Amounts */
+        for (String itemname : olditemnames)
         {
-            String itemname = (String) olditems.get(i);
-            int itemamount = Integer.valueOf((String) olditemamounts.get(i)); // yes ik it looks stupid just trust //
-            int index = editeditems.indexOf(itemname);
-
-            if (index == -1)
+            int oldindex = olditemnames.indexOf(itemname); 
+            int newindex = editeditems.indexOf(itemname);
+            if (newindex == -1)
             {
-                /* Item taken out of chest */
                 try
                 {
-                    bw.write(date + "," + playername + ",TOOKOUT," + itemname);
+                    bw.write(date + "," + playername + ",TOOK," + itemname + "," + olditemamounts.get(oldindex)); 
                     bw.newLine();
                 }
-                catch (IOException e)
+                catch(IOException e)
                 {
                     Bukkit.getLogger().info("[ChestLogger] IOException when writing to ledger #" + id);
+                    return;
                 }
                 continue;
             }
 
-            if (itemamount != Integer.valueOf(editeditemamounts.get(index)))
+            int oldamt = Integer.parseInt(olditemamounts.get(oldindex));
+            int newamt = Integer.parseInt(editeditemamounts.get(newindex));
+
+            if (oldamt != newamt)
             {
-                /* Item amount mutated */
-                int difference = Integer.valueOf(editeditemamounts.get(index)) - itemamount;
+                int difference = newamt - oldamt;
                 try
                 {
-                    if (difference < 0)
-                    {
-                        bw.write(date + "," + playername + ",TOOK," + itemname + "," + Integer.toString(difference));
-                        bw.newLine();
-                    }
-                    else
-                    {
-                        bw.write(date + "," + playername + ",ADDED," + itemname + "," + Integer.toString(difference));
-                        bw.newLine();
-                    }
-                }
-                catch (IOException e)
-                {
-                    Bukkit.getLogger().info("[ChestLogger] IOException when writing to ledger #" + id);
-                }
-            }
-        }
-
-        /* Now check for any new new items inside the chest */
-        for (int i = 0; i < editeditems.size(); ++i)
-        {
-            String item = (String) editeditems.get(i);
-            boolean found = true;
-            for (int k = 0; k < olditems.size(); ++k)
-            {
-                if (item.equals((String) olditems.get(k)))
-                {
-                    found = false;
-                    break;
-                }
-            }
-
-            if (found)
-            {
-                try
-                {
-                    bw.write(date + "," + playername + ",ADD," + item + "," + (String) editeditemamounts.get(i));
+                    bw.write(date + "," + playername + ",EDIT," + itemname + "," + Integer.toString(difference)); 
                     bw.newLine();
                 }
                 catch (IOException e)
                 {
                     Bukkit.getLogger().info("[ChestLogger] IOException when writing to ledger #" + id);
+                    return;
                 }
             }
+        }
+
+        for (String itemname : editeditems)
+        {
+            int oldindex = olditemnames.indexOf(itemname); 
+            int newindex = editeditems.indexOf(itemname);
+            if (oldindex == -1)
+            {
+                try
+                {
+                    bw.write(date + "," + playername + ",ADD," + itemname + "," + editeditemamounts.get(newindex)); 
+                    bw.newLine();
+                }
+                catch(IOException e)
+                {
+                    Bukkit.getLogger().info("[ChestLogger] IOException when writing to ledger #" + id);
+                    return;
+                }
+                continue;
+            }
+               
         }
 
         try
@@ -268,6 +290,7 @@ public class Utils
     }
 
     /* Returns chest id if location is in the data.json file
+     * @param plugin - the main plugin
      * @param location - the location to check
     */
     public static String getChestIdFromLocation(Main plugin, Location location)
@@ -290,6 +313,136 @@ public class Utils
         }
 
         return "";
+    }
+
+    /* Sends player messages of the chests they are watching
+     * @param plugin - the main plugin
+     * @param p - player requesting messages
+    */
+    public static void sendWatchedChests(Main plugin, Player p)
+    {
+        JSONObject obj = getJSON(DATAFILEPATH);
+        int counter = 1;
+        int max = plugin.getConfig().getInt("currentid");
+        String uuid = p.getUniqueId().toString();
+
+        for (; counter < max; counter++)
+        {
+            String idstr = String.format("%06d", counter);
+            JSONObject data = (JSONObject) obj.get(idstr);
+            String datauuid = (String) data.get("UUID");
+
+            if (datauuid.equals(uuid))
+            {
+                String x = (String) data.get("X");
+                String y = (String) data.get("Y");
+                String z = Integer.toString(Integer.parseInt((String) data.get("Z")) + 1);
+
+                p.sendMessage("§lID: §r" + counter + " | §lLocation: §r(" + x + ", " + y + ", " + z + ")");
+            }
+        }
+
+        p.sendMessage(" ");
+
+    }
+
+    /* Returns true if chest is already being watched by same player
+     * @param plugin - the plugin
+     * @param p - player trying to watch chest
+     * @param b - block object to look for 
+    */
+    public static boolean chestBeingWatched(Main plugin, Player p, Block b)
+    {
+        JSONObject obj = getJSON(DATAFILEPATH);
+        int counter = 1;
+        int max = plugin.getConfig().getInt("currentid");
+        String uuid = p.getUniqueId().toString();
+
+        for (; counter < max; counter++)
+        {
+            String idstr = String.format("%06d", counter);
+            JSONObject data = (JSONObject) obj.get(idstr);
+            String datauuid = (String) data.get("UUID");
+
+            if (datauuid.equals(uuid))
+            {
+                /* yes ik... just trust on this one */
+                Integer x = Integer.parseInt((String) data.get("X"));
+                Integer y = Integer.parseInt((String) data.get("Y"));
+                Integer z = Integer.parseInt((String) data.get("Z"));
+
+                if (x == b.getLocation().getBlockX() 
+                    && y == b.getLocation().getBlockY() 
+                    && z == b.getLocation().getBlockZ())
+                {
+                    return true;
+                }
+                
+            }
+        }
+
+        return false;
+    }
+
+    /* Sends the player the ledger requested 
+     * @param plugin - the plugin
+     * @param p - player requesting ledger 
+     * @param idstr - id of the chest
+    */
+    public static void printLedger(Main plugin, Player p, String idstr) throws IOException
+    {
+        JSONObject obj = getJSON(DATAFILEPATH);
+        JSONObject data = (JSONObject) obj.get(idstr);
+
+        if (data == null)
+        {
+            p.sendMessage("§c[Watched Chests] Chest #" + idstr + " doesn't exist!");
+            return;
+        }
+        if (!((String) data.get("UUID")).equals(p.getUniqueId().toString()))
+        {
+            p.sendMessage("§c[Watched Chests] Chest #" + idstr + " is not on your watchlist!");
+            return;
+        }
+
+        p.sendMessage(" ");
+		p.sendMessage("§l[§d§lChest #" + idstr + " Ledger§f§l]"); 
+        File ledgerfile = new File(LEDGERFILEPATH + idstr + ".txt");
+        FileReader fr = new FileReader(ledgerfile);
+        BufferedReader br = new BufferedReader(fr);
+
+        String line;
+        while ((line = br.readLine()) != null && !line.equals(""))
+        {
+            String[] spl = line.split(",");    
+            if (spl[2].equals("OPEN"))
+            {
+                p.sendMessage("§l" + spl[0] + " §r| " + spl[1] + " opened the chest");
+            }
+            else if (spl[2].equals("TOOK"))
+            {
+                p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " took out all " + spl[4] + " " + spl[3]);
+            } 
+            else if (spl[2].equals("ADD"))
+            {
+                p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " put in " + spl[4] + " " + spl[3]);
+            }
+            else if (spl[2].equals("EDIT"))
+            {
+                if (Integer.parseInt(spl[4]) > 0)
+                {
+                    p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " put in " + spl[4] + " " + spl[3]);
+                }
+                else
+                {
+                    p.sendMessage("§l" + spl[0] + " §r| "+ spl[1] + " took out " + Integer.toString(Integer.parseInt(spl[4])*-1) + " " + spl[3]);
+                }
+            }
+        }
+
+        Bukkit.getLogger().info("[ChestLogger] Could not close ledger file");
+
+        p.sendMessage(" ");
     }
 
 }

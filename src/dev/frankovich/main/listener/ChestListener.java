@@ -47,8 +47,6 @@ public class ChestListener implements Listener
 
             if (chestid.equals("")) return;
 
-            Bukkit.broadcastMessage(invevent.getPlayer().getName() + " opened chest #" + chestid);
-
             /* Update ledger */
             Utils.updateLedger(invevent.getInventory().getContents(), chestid, invevent.getPlayer().getName());
 

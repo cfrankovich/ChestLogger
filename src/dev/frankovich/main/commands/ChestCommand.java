@@ -1,5 +1,7 @@
 package dev.frankovich.main.commands;
 
+import java.io.IOException;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -53,6 +55,16 @@ public class ChestCommand implements CommandExecutor
 				del(p, args);
 				return true;
 			}
+			else if (arg.equals("list"))
+			{
+				list(p);
+				return true;
+			}
+			else if (arg.equals("ledger"))
+			{
+				ledger(p, args);
+				return true;
+			}
 
 		}
 		
@@ -63,7 +75,7 @@ public class ChestCommand implements CommandExecutor
 	 * @param p - Player in question
 	 * @param args - arguments passed to command 
 	*/
-	private int add(Player p, String[] args)
+	private void add(Player p, String[] args)
 	{
 		Block b = p.getTargetBlockExact(4);
 
@@ -71,42 +83,70 @@ public class ChestCommand implements CommandExecutor
 		if (b == null)
 		{
 			p.sendMessage("§c[ChestLogger] No blocks found or in range!");
-			return 1;
+			return;
 		}
 		
 		/* Verify that the block is a chest */
 		if (!b.getType().equals(Material.CHEST))
 		{
 			p.sendMessage("§c[ChestLogger] This is not a chest! Please aim at a chest to run this command.");
-			return 1;
+			return;
 		}
 
-		try
+		Chest ch = (Chest) b.getLocation().getBlock().getState();
+		ItemStack[] stack = ch.getBlockInventory().getContents();
+		if (Utils.chestBeingWatched(plugin, p, b))
 		{
-			Chest ch = (Chest) b.getLocation().getBlock().getState();
-			ItemStack[] stack = ch.getBlockInventory().getContents();
-			Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), false);
+			p.sendMessage("§c[ChestLogger] You are already watching this chest!");	
+			return;
 		}
-		catch (Exception e)
-		{
-			DoubleChest ch = (DoubleChest) b.getLocation().getBlock().getState();
-			ItemStack[] stack = ch.getInventory().getContents();
-			Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), true);
-		}
+		Utils.newChestEntry(plugin, p.getName(), p.getUniqueId().toString(), stack, b.getLocation().getBlockX(), b.getLocation().getBlockY(), b.getLocation().getBlockZ(), false);
 
 		p.sendMessage("[§dChestLogger§f] Chest added to your watch list.");
-
-		return 0;
 	}
 
 	/* Remove an entry from the "data base"
-	 * @param p - Player in question
+	 * @param p - Player requesting the delete 
 	 * @param args - arguments passed to command 
 	*/
-	private int del(Player p, String[] args)
+	private void del(Player p, String[] args)
 	{
 		p.sendMessage("deleting!");
-		return 0;
 	}
+
+	/* Lists all the chests the player is watching
+	 * @param p - Player requesting the list 
+	*/
+	private void list(Player p)
+	{
+		p.sendMessage(" ");
+		p.sendMessage("§l[§d§lWatched Chests§f§l]"); 
+		Utils.sendWatchedChests(plugin, p);
+	}
+
+	/* Sends the chest ledger to player given from id
+	 * @param p - player requesting ledger
+	 * @param args - arguments given
+	*/
+	private void ledger(Player p, String[] args)
+	{
+		String idstr;
+		try
+		{
+            idstr = String.format("%06d", Integer.parseInt(args[1]));
+			try
+			{	
+				Utils.printLedger(plugin, p, idstr);
+			}
+			catch (IOException e)
+			{
+				Bukkit.getLogger().info("[ChestLogger] Error with reading ledger file");
+			}
+		}
+		catch (IndexOutOfBoundsException e)
+		{
+			p.sendMessage("§c[ChestLogger] Please provide an id");
+		}
+	} 
 
 }

@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 public class ChestTabComplete implements TabCompleter 
 {
-    private static final List<String> COMMANDS = Arrays.asList("add", "del");
+    private static final List<String> COMMANDS = Arrays.asList("add", "del", "list");
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) 
