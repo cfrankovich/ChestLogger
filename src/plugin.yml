@@ -1,5 +1,5 @@
 name: ChestLogger
-version: 1.0
+version: 0.1.0
 api-version: 1.18
 author: cfrankovich
 main: dev.frankovich.main.Main
@@ -7,4 +7,4 @@ description: Keeps track of chests with a ledger and watchlist.
 
 commands:
   chest:
-    description: Full description on github (github/cfrankovich/ChestLogger)
+    description: Full description on github (https://github.com/cfrankovich/ChestLogger)
