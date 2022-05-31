@@ -1,10 +1,12 @@
 package dev.frankovich.main.listener;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 
 import dev.frankovich.main.Main;
@@ -18,6 +20,18 @@ public class ChestListener implements Listener
     {
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
+    }
+
+    @EventHandler
+    public void playerBreakChest(BlockBreakEvent bbe)
+    {
+        if (!bbe.getBlock().getState().getType().equals(Material.CHEST)) return;
+
+        String chestid = Utils.getChestIdFromLocation(bbe.getBlock().getLocation()); 
+        if (chestid.equals("")) return;
+
+        Utils.updateLedger(null, chestid, bbe.getPlayer().getName());
+        Utils.updateChestFile(null, chestid);
     }
 
     @EventHandler

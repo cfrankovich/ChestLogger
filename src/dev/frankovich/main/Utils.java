@@ -22,9 +22,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import net.minecraft.network.syncher.DataWatcher.Item;
-import net.minecraft.world.level.material.Material;
-
 public class Utils 
 {
     private static final String DATAFILEPATH = "./plugins/ChestLogger/data.json";
@@ -98,6 +95,22 @@ public class Utils
     */
     public static void updateChestFile(ItemStack[] stack, String id)
     {
+        /* Someone broke chest */
+        if (stack == null)
+        {
+            try
+            {
+                FileWriter writer = new FileWriter(CHESTFILEPATH + id + ".json");
+                writer.write("");
+                writer.close();
+            }
+            catch (IOException e)
+            {
+                Bukkit.getLogger().info("[ChestLogger] Could not write to file \"" + CHESTFILEPATH + id + ".json" + "\"");
+            }
+            return;
+        }
+
         JSONObject items = new JSONObject();
         JSONArray jsonitems = new JSONArray();
         JSONArray jsonamounts = new JSONArray();
@@ -130,6 +143,27 @@ public class Utils
     public static void updateLedger(ItemStack[] stack, String id, String playername)
     {
         JSONObject obj = getJSON(CHESTFILEPATH + id + ".json");
+        String date = java.time.LocalDate.now().toString();
+        FileWriter fw;
+        BufferedWriter bw;
+
+        /* Someone broke the chest */
+        if (stack == null)
+        {
+            try
+            {
+                fw = new FileWriter(LEDGERFILEPATH + id + ".txt", true);
+                bw = new BufferedWriter(fw);
+                bw.write(date + "," + playername + ",BREAK");
+                bw.newLine();
+                bw.close();
+            }
+            catch (IOException e)
+            {
+                Bukkit.getLogger().info("[ChestLogger] IOException when writing to ledger #" + id);
+            }
+            return;
+        }
 
         /* Old Items */
         JSONArray olditemsjson = (JSONArray) obj.get("item");
@@ -169,10 +203,6 @@ public class Utils
                 editeditemamounts.set(index, Integer.toString(total));
             }
         }
-
-        String date = java.time.LocalDate.now().toString();
-        FileWriter fw;
-        BufferedWriter bw;
 
         try
         {
@@ -463,6 +493,10 @@ public class Utils
             else if (spl[2].equals("ADD"))
             {
                 p.sendMessage("§a§l" + otherplayerindicator + spl[0] + " §r§a| "+ spl[1] + " put in " + spl[4] + " " + spl[3]);
+            }
+            else if (spl[2].equals("BREAK"))
+            {
+                p.sendMessage("§c§l" + otherplayerindicator + spl[0] + " §r§c| "+ spl[1] + " broke your chest!");
             }
             else if (spl[2].equals("EDIT"))
             {
