@@ -26,3 +26,4 @@ _Output of /chest ledger [ID]_
 
 ## Releases 
 - [v0.1.0](https://github.com/cfrankovich/ChestLogger/releases/tag/v0.1.0) - Initial Release
+- [v0.1.1](https://github.com/cfrankovich/ChestLogger/releases/tag/v0.1.1) - Double Chest Fix
