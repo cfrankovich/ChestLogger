@@ -395,12 +395,12 @@ public class Utils
 
         if (data == null)
         {
-            p.sendMessage("§c[Watched Chests] Chest #" + idstr + " doesn't exist!");
+            p.sendMessage("§c[ChestLogger] Chest #" + idstr + " doesn't exist!");
             return;
         }
         if (!((String) data.get("UUID")).equals(p.getUniqueId().toString()))
         {
-            p.sendMessage("§c[Watched Chests] Chest #" + idstr + " is not on your watchlist!");
+            p.sendMessage("§c[ChestLogger] Chest #" + idstr + " is not on your watchlist!");
             return;
         }
 
@@ -468,4 +468,33 @@ public class Utils
 
         return returnme;
     }
+
+    /* Returns all chest ids that the player can interact with 
+     * @param player - player that is requesting clear 
+     * @param idstr - the id of the ledger to clear
+    */
+    public static void clearLedger(Player player, String idstr) throws IOException 
+    {
+        JSONObject obj = getJSON(DATAFILEPATH);
+        JSONObject data = (JSONObject) obj.get(idstr);
+        if (data == null)
+        {
+            player.sendMessage("§c[ChestLogger] Chest #" + idstr + " doesn't exist!");
+            return;
+        }
+        if (!((String) data.get("UUID")).equals(player.getUniqueId().toString()))
+        {
+            player.sendMessage("§c[ChestLogger] You are not watching this chest"); 
+            return;
+        }
+
+        FileWriter fw;
+        BufferedWriter bw;
+        fw = new FileWriter(LEDGERFILEPATH + idstr + ".txt");
+        bw = new BufferedWriter(fw);
+        bw.write("");
+        bw.close();
+        fw.close();
+    }
+
 }

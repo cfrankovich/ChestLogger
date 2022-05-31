@@ -24,13 +24,11 @@ public class ChestTabComplete implements TabCompleter
             {
                 return COMMANDS;
             }
-            /*
             else if (args.length == 2) 
             {
                 List<String> idsofplayer = Utils.getInteractableIds(sender.getName()); 
                 return idsofplayer;
             }
-            */
         }
         
         return null;

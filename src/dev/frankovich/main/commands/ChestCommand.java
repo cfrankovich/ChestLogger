@@ -65,6 +65,11 @@ public class ChestCommand implements CommandExecutor
 				ledger(p, args);
 				return true;
 			}
+			else if (arg.equals("clear"))
+			{
+				clearledger(p, args);
+				return true;
+			}
 
 		}
 		
@@ -149,4 +154,26 @@ public class ChestCommand implements CommandExecutor
 		}
 	} 
 
+	private void clearledger(Player p, String[] args)
+	{
+		String idstr;
+		try
+		{
+            idstr = String.format("%06d", Integer.parseInt(args[1]));
+			try
+			{	
+				Utils.clearLedger(p, idstr);
+			}
+			catch (IOException e)
+			{
+				Bukkit.getLogger().info("[ChestLogger] Error with reading ledger file");
+			}
+		}
+		catch (IndexOutOfBoundsException e)
+		{
+			p.sendMessage("§c[ChestLogger] Please provide an id");
+		}
+
+		p.sendMessage("[§dChestLogger§f] Ledger cleared"); 
+	} 
 }
