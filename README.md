@@ -25,5 +25,7 @@ _Output of /chest ledger [ID]_
 ![LedgerExample](https://i.imgur.com/okky5ob.png)
 
 ## Releases 
+### v0.1
 - [v0.1.0](https://github.com/cfrankovich/ChestLogger/releases/tag/v0.1.0) - Initial Release
 - [v0.1.1](https://github.com/cfrankovich/ChestLogger/releases/tag/v0.1.1) - Double Chest Fix
+- [v0.1.2](https://github.com/cfrankovich/ChestLogger/releases/tag/v0.1.2) - Permissions and Broken Chest Fix
