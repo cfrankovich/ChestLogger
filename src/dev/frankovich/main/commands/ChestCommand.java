@@ -37,11 +37,13 @@ public class ChestCommand implements CommandExecutor
 		}
 
 		Player p = (Player) sender;
+		/* Dont feel like dealing with perms (Fix issue #3)
 		if (!p.hasPermission("chest.use"))
 		{
 			sender.sendMessage("§c[ChestLogger] You do not have permission to execute this command.");
 			return true;
 		}
+		*/
 
 		for (String arg: args)
 		{
